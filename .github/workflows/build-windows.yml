@@ -1,0 +1,112 @@
+name: Build SiteForge AI for Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Application version'
+        required: false
+        default: '1.0.0'
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  PYTHON_VERSION: '3.11'
+  APP_DIR: SiteForgeAI
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: SiteForgeAI/requirements.txt
+
+      - name: Install dependencies
+        working-directory: ${{ env.APP_DIR }}
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install PySide6-WebEngine
+
+      - name: Verify application imports
+        working-directory: ${{ env.APP_DIR }}
+        shell: pwsh
+        run: |
+          python -c "import PySide6; from PySide6.QtWebEngineWidgets import QWebEngineView; import paramiko; import cryptography; print('Dependencies OK')"
+
+      - name: Build EXE with PyInstaller
+        working-directory: ${{ env.APP_DIR }}
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force dist, build -ErrorAction SilentlyContinue
+          python -m PyInstaller --noconfirm --clean --windowed --name SiteForgeAI --collect-all PySide6 --collect-all PySide6.QtWebEngineCore --collect-all PySide6.QtWebEngineWidgets --collect-all PySide6.QtWebChannel --hidden-import paramiko --hidden-import cryptography main.py
+
+      - name: Package documentation
+        working-directory: ${{ env.APP_DIR }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist\SiteForgeAI\docs | Out-Null
+          if (Test-Path docs\index.html) { Copy-Item docs\index.html dist\SiteForgeAI\docs\UserGuide.html -Force }
+          if (Test-Path PRIVACY_POLICY.html) { Copy-Item PRIVACY_POLICY.html dist\SiteForgeAI\PRIVACY_POLICY.html -Force }
+          if (Test-Path LICENSE.txt) { Copy-Item LICENSE.txt dist\SiteForgeAI\LICENSE.txt -Force }
+          if (Test-Path THIRD_PARTY_LICENSES.md) { Copy-Item THIRD_PARTY_LICENSES.md dist\SiteForgeAI\THIRD_PARTY_LICENSES.md -Force }
+          if (Test-Path CHANGELOG.md) { Copy-Item CHANGELOG.md dist\SiteForgeAI\CHANGELOG.md -Force }
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows Installer
+        working-directory: ${{ env.APP_DIR }}
+        shell: pwsh
+        run: |
+          $iss = Join-Path $PWD 'installer\SiteForgeAI.iss'
+          if (!(Test-Path $iss)) { throw 'installer\SiteForgeAI.iss not found' }
+          $version = '${{ github.event.inputs.version }}'
+          if ([string]::IsNullOrWhiteSpace($version)) { $version = '${{ github.ref_name }}'.TrimStart('v') }
+          if ([string]::IsNullOrWhiteSpace($version)) { $version = '1.0.0' }
+          $content = Get-Content $iss -Raw
+          $content = $content -replace 'AppVersion=1\.0\.0', "AppVersion=$version"
+          Set-Content $iss $content -Encoding UTF8
+          New-Item -ItemType Directory -Force -Path dist\installer | Out-Null
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' $iss
+
+      - name: Create portable ZIP
+        working-directory: ${{ env.APP_DIR }}
+        shell: pwsh
+        run: |
+          if (Test-Path dist\SiteForgeAI-Portable.zip) { Remove-Item dist\SiteForgeAI-Portable.zip -Force }
+          Compress-Archive -Path dist\SiteForgeAI -DestinationPath dist\SiteForgeAI-Portable.zip
+
+      - name: Upload EXE and installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SiteForgeAI-Windows
+          path: |
+            SiteForgeAI/dist/SiteForgeAI/SiteForgeAI.exe
+            SiteForgeAI/dist/SiteForgeAI-Portable.zip
+            SiteForgeAI/dist/installer/SiteForgeAI-Setup.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            SiteForgeAI/dist/installer/SiteForgeAI-Setup.exe
+            SiteForgeAI/dist/SiteForgeAI-Portable.zip
+          generate_release_notes: true
