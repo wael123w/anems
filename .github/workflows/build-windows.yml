@@ -39,7 +39,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python -m pip install PySide6-WebEngine
 
       - name: Verify application imports
         working-directory: ${{ env.APP_DIR }}
@@ -83,6 +82,7 @@ jobs:
           Set-Content $iss $content -Encoding UTF8
           New-Item -ItemType Directory -Force -Path dist\installer | Out-Null
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' $iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Create portable ZIP
         working-directory: ${{ env.APP_DIR }}
@@ -91,7 +91,7 @@ jobs:
           if (Test-Path dist\SiteForgeAI-Portable.zip) { Remove-Item dist\SiteForgeAI-Portable.zip -Force }
           Compress-Archive -Path dist\SiteForgeAI -DestinationPath dist\SiteForgeAI-Portable.zip
 
-      - name: Upload EXE and installer artifacts
+      - name: Upload Windows build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: SiteForgeAI-Windows
