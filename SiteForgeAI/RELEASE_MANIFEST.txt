@@ -1,0 +1,22 @@
+SiteForge AI 1.0.0 — Release Manifest
+
+Product: SiteForge AI
+Build target: Windows 10/11 x64
+Architecture: Local-first Python/PySide6 desktop application
+AI access: BYOK — OpenAI, Gemini, Claude, OpenRouter
+Storage: Local SQLite and encrypted local secret store
+Deployment: FTP, FTPS, SFTP, cPanel API, DirectAdmin API when configured
+
+Source package contents:
+- Source/SiteForgeAI: source code, tests, build script, installer configuration and documentation
+- Documentation: English help file, privacy policy, setup guides, licenses and release checklist
+
+Not included in this source package:
+- API keys or hosting credentials
+- Personal project files
+- Development caches
+- Screenshots and capture scripts
+- A Windows EXE or Inno Setup installer built on the Linux development environment
+
+Windows release gate:
+The publisher must run build_windows.ps1 on a real Windows 10/11 x64 machine, run Inno Setup using installer/SiteForgeAI.iss, test the installer on a clean machine, and attach the resulting EXE/installer to the final marketplace package.

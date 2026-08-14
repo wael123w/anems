@@ -1,0 +1,14 @@
+[project]
+name = "siteforge-ai"
+version = "1.0.0"
+description = "Local-first AI website builder for Windows"
+requires-python = ">=3.11"
+readme = "README.md"
+dependencies = ["PySide6>=6.7,<7", "cryptography>=42,<45", "requests>=2.32,<3", "paramiko>=3.4,<4"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.pyinstaller]
+# The canonical build command is in build_windows.ps1.

@@ -1,0 +1,10 @@
+SITEFORGE AI — COMMERCIAL DISTRIBUTION NOTICE
+Version 1.0.0 — Copyright © 2026 SiteForge AI
+
+This package is distributed as a commercial software item through the marketplace license selected by the purchaser. The purchaser may install and use the compiled application and included source materials only within the scope of the applicable Envato Market license and the terms shown on the item page at the time of purchase.
+
+The purchaser may not resell, redistribute, sublicense, publish, share, or use the source code or compiled application to create a competing website builder or marketplace item. The purchaser may create websites for permitted end products under the applicable marketplace license.
+
+No ownership of third-party software is transferred by this notice. Third-party components remain under their respective licenses, listed in THIRD_PARTY_LICENSES.md. SiteForge AI is provided without a guarantee of uninterrupted operation. AI provider availability, hosting provider availability, network access, and third-party pricing are outside the control of SiteForge AI.
+
+The publisher must replace the publisher identity and obtain professional legal review before commercial distribution if a different legal entity will publish the item. This notice does not replace the current Envato Market license or the applicable law.
